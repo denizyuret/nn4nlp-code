@@ -1,3 +1,6 @@
+#jl Use `Literate.notebook(juliafile, ".", execute=false)` to convert to notebook.
+
+
 # # Convolutional Sentiment Classification Network
 
 using Knet
@@ -57,10 +60,11 @@ function (model::CNN)(x)
     end
     emb = model.embedding(x)
     T, E = size(emb); B = 1
-    emb = reshape(emb, 1, T, E, B)
-    hidden = relu.(maximum(model.conv1d(emb), dims=2))
-    hidden = reshape(hidden, size(hidden,3), B)
-    output = model.linear(hidden)
+    emb = reshape(emb, 1, T, E, B)              # 1, Time, Embedding, Batch
+    hidden = model.conv1d(emb)                  # 1, Time-1, Nfilters, Batch
+    hidden = relu.(maximum(hidden, dims=2))     # 1, 1, Nfilters, Batch
+    hidden = reshape(hidden, size(hidden,3), B) # Nfilters, Batch
+    output = model.linear(hidden)               # Nclasses, Batch
 end
 
 (model::CNN)(x,y) = nll(model(x),y)
@@ -91,11 +95,11 @@ Conv(embedsize::Int, nfilters::Int, windowsize::Int) = Conv(
 # We initialize our model,
 
 EMBEDSIZE = 64
-WINSIZE = KERNELSIZE = 3
+WINSIZE = 3
 NFILTERS = 64
 model = CNN(
     Embedding(nwords, EMBEDSIZE),
-    Conv(EMBEDSIZE, NFILTERS, KERNELSIZE),
+    Conv(EMBEDSIZE, NFILTERS, WINSIZE),
     Linear(NFILTERS, ntags))
 
 # We implement a validation procedure which computes accuracy and average loss
@@ -113,7 +117,7 @@ end
 
 # Finally, here is the training loop:
 
-function train(nepochs=20)
+function train(nepochs=10)
     for epoch=1:nepochs
         progress!(adam(model, shuffle(trn)))
 
@@ -126,3 +130,7 @@ function train(nepochs=20)
                 epoch, devloss, devacc)
     end
 end
+
+# Exercises:
+# - The training results in significant overfitting; try using dropout.
+# - The training is too slow; try minibatching.
