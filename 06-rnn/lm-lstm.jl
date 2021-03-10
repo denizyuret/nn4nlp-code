@@ -248,7 +248,7 @@ Random.seed!(123);
 
 ## Define char set, batchsize and max sequence length
 char_set = " #\$&'*-./0123456789<>N\\abcdefghijklmnopqrstuvwxyz"
-datadir = "penn/"
+datadir = "../data/ptb"
 BATCHSIZE, MAXLENGTH = 16, 256
 
 @info "Reading data"
